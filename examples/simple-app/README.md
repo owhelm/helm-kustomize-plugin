@@ -17,10 +17,15 @@ This chart deploys a simple nginx application and uses kustomize to apply transf
 simple-app/
 ├── Chart.yaml
 ├── values.yaml
+├── kustomization/                # Kustomize files directory
+│   ├── kustomization.yaml        # Main kustomization config
+│   └── patches/
+│       ├── deployment-replicas.yaml
+│       └── add-label.yaml
 └── templates/
     ├── deployment.yaml           # Basic nginx deployment
     ├── service.yaml              # ClusterIP service
-    └── kustomize-files.yaml      # Embedded kustomization files
+    └── kustomize-files.yaml      # Template using .Files to embed kustomization files
 ```
 
 ## How It Works
