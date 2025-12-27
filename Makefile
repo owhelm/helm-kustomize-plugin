@@ -1,4 +1,4 @@
-.PHONY: build clean test install uninstall
+.PHONY: build clean test test-integration test-all install uninstall reinstall
 
 BINARY_NAME=helm-kustomize-plugin
 BUILD_DIR=.
@@ -12,6 +12,11 @@ clean:
 
 test:
 	go test -v ./...
+
+test-integration: reinstall
+	./test-integration.sh
+
+test-all: test test-integration
 
 install: build
 	helm plugin install .

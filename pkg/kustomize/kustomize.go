@@ -3,6 +3,7 @@ package kustomize
 import (
 	"bytes"
 	"fmt"
+	"os/exec"
 	"slices"
 
 	"gopkg.in/yaml.v3"
@@ -84,4 +85,14 @@ func EnsureAllYamlInKustomization(kustomizationContent []byte) (updated []byte, 
 	}
 
 	return updated, changed, nil
+}
+
+// Build runs kubectl kustomize on the given directory and returns the output
+func Build(dir string) ([]byte, error) {
+	cmd := exec.Command("kubectl", "kustomize", dir)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("kubectl kustomize failed: %w\nOutput: %s", err, string(output))
+	}
+	return output, nil
 }
