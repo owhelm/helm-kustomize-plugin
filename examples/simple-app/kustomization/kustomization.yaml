@@ -1,0 +1,6 @@
+resources:
+- all.yaml
+
+patches:
+- path: patches/deployment-replicas.yaml
+- path: patches/add-label.yaml

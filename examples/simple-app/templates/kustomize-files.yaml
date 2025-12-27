@@ -1,0 +1,9 @@
+apiVersion: helm.kustomize.plugin/v1alpha1
+kind: KustomizeFiles
+metadata:
+  name: kustomize-files
+files:
+  {{- range $path, $_ := .Files.Glob "kustomization/**" }}
+  {{ trimPrefix "kustomization/" $path }}: |
+{{ $.Files.Get $path | indent 4 }}
+  {{- end }}
