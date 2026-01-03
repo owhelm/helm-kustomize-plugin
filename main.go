@@ -70,6 +70,11 @@ func (k *KustomizePostRenderer) Run(renderedManifests *bytes.Buffer) (*bytes.Buf
 	}
 	defer tempDir.Cleanup()
 
+	// Check if files contain all.yaml - we need to reserve this name
+	if _, exists := result.KustomizePluginData.Files["all.yaml"]; exists {
+		return nil, fmt.Errorf("KustomizePluginData.files cannot contain 'all.yaml' - this file is reserved for Helm manifests")
+	}
+
 	// Extract files from KustomizePluginData resource
 	if err := tempDir.ExtractFiles(result.KustomizePluginData.Files); err != nil {
 		return nil, fmt.Errorf("failed to extract files: %w", err)
