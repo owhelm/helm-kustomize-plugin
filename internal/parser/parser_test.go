@@ -67,7 +67,7 @@ func TestIsKustomizeFilesResource(t *testing.T) {
 }
 
 func TestParseManifests_EmptyInput(t *testing.T) {
-	input := strings.NewReader("")
+	input := []byte("")
 	result, err := ParseManifests(input)
 
 	if err != nil {
@@ -84,7 +84,7 @@ func TestParseManifests_EmptyInput(t *testing.T) {
 }
 
 func TestParseManifests_NoKustomizeFiles(t *testing.T) {
-	input := strings.NewReader(`---
+	input := []byte(`---
 apiVersion: v1
 kind: Service
 metadata:
@@ -115,7 +115,7 @@ metadata:
 }
 
 func TestParseManifests_WithKustomizeFiles(t *testing.T) {
-	input := strings.NewReader(`---
+	input := []byte(`---
 apiVersion: v1
 kind: Service
 metadata:
@@ -179,7 +179,7 @@ metadata:
 }
 
 func TestParseManifests_MultipleKustomizeFiles(t *testing.T) {
-	input := strings.NewReader(`---
+	input := []byte(`---
 apiVersion: helm.kustomize.plugin/v1alpha1
 kind: KustomizeFiles
 metadata:
@@ -206,7 +206,7 @@ files:
 }
 
 func TestParseManifests_InvalidYAML(t *testing.T) {
-	input := strings.NewReader(`---
+	input := []byte(`---
 this is not: valid: yaml: structure
   bad indentation
 `)

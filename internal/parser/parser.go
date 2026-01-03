@@ -38,16 +38,11 @@ func IsKustomizeFilesResource(resource map[string]any) bool {
 	return true
 }
 
-// ParseManifests reads YAML input and separates KustomizeFiles from other resources
-func ParseManifests(input io.Reader) (*ParseResult, error) {
+// ParseManifests parses YAML input from bytes and separates KustomizeFiles from other resources
+func ParseManifests(data []byte) (*ParseResult, error) {
 	result := &ParseResult{
 		OtherResources: make([]map[string]any, 0),
 		RawOthers:      make([][]byte, 0),
-	}
-
-	data, err := io.ReadAll(input)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read input: %w", err)
 	}
 
 	// Split by YAML document separator
