@@ -62,7 +62,7 @@ func ParseManifests(data []byte) (*ParseResult, error) {
 		}
 
 		// Skip empty documents
-		if doc == nil || len(doc) == 0 {
+		if len(doc) == 0 {
 			continue
 		}
 

@@ -5,62 +5,92 @@ import (
 	"testing"
 )
 
-func TestIsKustomizePluginDataResource(t *testing.T) {
+func TestParseManifests_KustomizePluginDataDetection(t *testing.T) {
 	tests := []struct {
-		name     string
-		resource map[string]any
-		want     bool
+		name                    string
+		input                   string
+		wantKustomizePluginData bool
+		wantOtherResourcesCount int
 	}{
 		{
 			name: "valid KustomizePluginData resource",
-			resource: map[string]any{
-				"apiVersion": APIVersion,
-				"kind":       Kind,
-			},
-			want: true,
+			input: `---
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
+metadata:
+  name: test
+files:
+  test.yaml: content
+`,
+			wantKustomizePluginData: true,
+			wantOtherResourcesCount: 0,
 		},
 		{
 			name: "wrong apiVersion",
-			resource: map[string]any{
-				"apiVersion": "v1",
-				"kind":       Kind,
-			},
-			want: false,
+			input: `---
+apiVersion: v1
+kind: KustomizePluginData
+metadata:
+  name: test
+`,
+			wantKustomizePluginData: false,
+			wantOtherResourcesCount: 1,
 		},
 		{
 			name: "wrong kind",
-			resource: map[string]any{
-				"apiVersion": APIVersion,
-				"kind":       "ConfigMap",
-			},
-			want: false,
+			input: `---
+apiVersion: helm.plugin.kustomize/v1
+kind: ConfigMap
+metadata:
+  name: test
+`,
+			wantKustomizePluginData: false,
+			wantOtherResourcesCount: 1,
 		},
 		{
 			name: "missing apiVersion",
-			resource: map[string]any{
-				"kind": Kind,
-			},
-			want: false,
+			input: `---
+kind: KustomizePluginData
+metadata:
+  name: test
+`,
+			wantKustomizePluginData: false,
+			wantOtherResourcesCount: 1,
 		},
 		{
 			name: "missing kind",
-			resource: map[string]any{
-				"apiVersion": APIVersion,
-			},
-			want: false,
+			input: `---
+apiVersion: helm.plugin.kustomize/v1
+metadata:
+  name: test
+`,
+			wantKustomizePluginData: false,
+			wantOtherResourcesCount: 1,
 		},
 		{
-			name:     "empty resource",
-			resource: map[string]any{},
-			want:     false,
+			name: "empty resource",
+			input: `---
+{}
+`,
+			wantKustomizePluginData: false,
+			wantOtherResourcesCount: 0,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := IsKustomizePluginDataResource(tt.resource)
-			if got != tt.want {
-				t.Errorf("IsKustomizePluginDataResource() = %v, want %v", got, tt.want)
+			result, err := ParseManifests([]byte(tt.input))
+			if err != nil {
+				t.Fatalf("ParseManifests() error = %v, want nil", err)
+			}
+
+			hasKustomizePluginData := result.KustomizePluginData != nil
+			if hasKustomizePluginData != tt.wantKustomizePluginData {
+				t.Errorf("KustomizePluginData presence = %v, want %v", hasKustomizePluginData, tt.wantKustomizePluginData)
+			}
+
+			if len(result.OtherResources) != tt.wantOtherResourcesCount {
+				t.Errorf("OtherResources count = %d, want %d", len(result.OtherResources), tt.wantOtherResourcesCount)
 			}
 		})
 	}
