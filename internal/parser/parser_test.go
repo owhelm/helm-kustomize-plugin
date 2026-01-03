@@ -232,20 +232,20 @@ func TestMarshalResources(t *testing.T) {
 		t.Fatalf("MarshalResources() error = %v, want nil", err)
 	}
 
-	str := string(data)
+	expected := `apiVersion: v1
+kind: Service
+metadata:
+    name: test-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: test-deployment
+`
 
-	// Should contain document separator
-	if !strings.Contains(str, "---") {
-		t.Error("Expected document separator in output")
-	}
-
-	// Should contain both resources
-	if !strings.Contains(str, "Service") {
-		t.Error("Expected Service in output")
-	}
-
-	if !strings.Contains(str, "Deployment") {
-		t.Error("Expected Deployment in output")
+	got := string(data)
+	if got != expected {
+		t.Errorf("MarshalResources() output mismatch\nGot:\n%s\nExpected:\n%s", got, expected)
 	}
 }
 
