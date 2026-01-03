@@ -8,6 +8,9 @@
 *.so
 *.dylib
 
+# Plugin binary
+helm-kustomize-plugin
+
 # Test binary, built with `go test -c`
 *.test
 
