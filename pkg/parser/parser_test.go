@@ -258,7 +258,7 @@ func TestMarshalResources(t *testing.T) {
 }
 
 func TestMarshalResources_Empty(t *testing.T) {
-	resources := []map[string]any{}
+	var resources []map[string]any
 
 	data, err := MarshalResources(resources)
 	if err != nil {
