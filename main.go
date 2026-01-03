@@ -54,13 +54,9 @@ func (k *KustomizePostRenderer) Run(renderedManifests *bytes.Buffer) (*bytes.Buf
 		return nil, fmt.Errorf("failed to parse input: %w", err)
 	}
 
-	// If no KustomizePluginData resource found, pass through the input
+	// If no KustomizePluginData resource found, pass through the input unchanged
 	if result.KustomizePluginData == nil {
-		data, err := parser.MarshalResources(result.OtherResources)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal resources: %w", err)
-		}
-		return bytes.NewBuffer(data), nil
+		return renderedManifests, nil
 	}
 
 	// Create temporary directory for kustomize files
