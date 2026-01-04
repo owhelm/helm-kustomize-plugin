@@ -6,19 +6,14 @@ import (
 	"io"
 	"os"
 
-	"helm.sh/helm/v4/pkg/postrenderer"
-
 	"github.com/owhelm/helm-kustomize-plugin/internal/extractor"
 	"github.com/owhelm/helm-kustomize-plugin/internal/kustomize"
 	"github.com/owhelm/helm-kustomize-plugin/internal/parser"
 )
 
-// KustomizePostRenderer implements the Helm PostRenderer interface.
-// It processes manifests through kustomize transformations.
+// KustomizePostRenderer processes Helm manifests through kustomize transformations.
+// It implements Helm's post-renderer protocol by reading from stdin and writing to stdout.
 type KustomizePostRenderer struct{}
-
-// Compile-time interface compliance check
-var _ postrenderer.PostRenderer = (*KustomizePostRenderer)(nil)
 
 func main() {
 	// Create the post-renderer
