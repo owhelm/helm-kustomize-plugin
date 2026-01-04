@@ -1,6 +1,7 @@
 package kustomize
 
 import (
+	"os"
 	"slices"
 	"strings"
 	"testing"
@@ -343,6 +344,31 @@ func TestBuild_Error(t *testing.T) {
 	_, err := Build("/nonexistent/directory/that/does/not/exist")
 	if err == nil {
 		t.Fatal("Build() should return error for non-existent directory")
+	}
+	if !strings.Contains(err.Error(), "kubectl kustomize failed") {
+		t.Errorf("Error should mention kubectl kustomize failed, got: %v", err)
+	}
+}
+
+func TestBuild_InvalidKustomizationYaml(t *testing.T) {
+	// Test Build with an invalid kustomization.yaml file
+	// This tests the kubectl kustomize execution failure path
+	tempDir := t.TempDir()
+
+	// Create an invalid kustomization.yaml that references a non-existent file
+	kustomizationContent := []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - nonexistent-file.yaml
+`)
+
+	if err := os.WriteFile(tempDir+"/kustomization.yaml", kustomizationContent, 0644); err != nil {
+		t.Fatalf("Failed to write kustomization.yaml: %v", err)
+	}
+
+	_, err := Build(tempDir)
+	if err == nil {
+		t.Fatal("Build() should return error for invalid kustomization")
 	}
 	if !strings.Contains(err.Error(), "kubectl kustomize failed") {
 		t.Errorf("Error should mention kubectl kustomize failed, got: %v", err)

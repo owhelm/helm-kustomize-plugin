@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 )
@@ -295,5 +296,152 @@ spec:
 
 	if output.String() != expected {
 		t.Errorf("Output mismatch.\nExpected:\n%s\nGot:\n%s", expected, output.String())
+	}
+}
+
+func TestKustomizePostRenderer_Run_ExtractFilesInvalidPath(t *testing.T) {
+	// Test that directory traversal in file paths is rejected
+	input := bytes.NewBufferString(`---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+---
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
+files:
+  ../../../etc/passwd: |
+    malicious content
+`)
+
+	renderer := &KustomizePostRenderer{}
+	_, err := renderer.Run(input)
+	if err == nil {
+		t.Fatal("Expected error for directory traversal attempt, got nil")
+	}
+	if !strings.Contains(err.Error(), "failed to extract files") {
+		t.Errorf("Expected error message about failed to extract files, got: %v", err)
+	}
+}
+
+func TestKustomizePostRenderer_Run_InvalidKustomizationResources(t *testing.T) {
+	// Test that invalid kustomization.yaml (resources not array) returns error
+	input := bytes.NewBufferString(`---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+---
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
+files:
+  kustomization.yaml: |
+    resources: "not an array"
+`)
+
+	renderer := &KustomizePostRenderer{}
+	_, err := renderer.Run(input)
+	if err == nil {
+		t.Fatal("Expected error for invalid kustomization.yaml, got nil")
+	}
+	if !strings.Contains(err.Error(), "failed to update kustomization.yaml") {
+		t.Errorf("Expected error message about failed to update kustomization.yaml, got: %v", err)
+	}
+}
+
+func TestKustomizePostRenderer_Run_InvalidKustomizationYaml(t *testing.T) {
+	// Test that invalid kustomization.yaml causes kubectl kustomize to fail
+	input := bytes.NewBufferString(`---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+---
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
+files:
+  kustomization.yaml: |
+    apiVersion: kustomize.config.k8s.io/v1beta1
+    kind: Kustomization
+    resources:
+      - all.yaml
+      - nonexistent-file.yaml
+`)
+
+	renderer := &KustomizePostRenderer{}
+	_, err := renderer.Run(input)
+	if err == nil {
+		t.Fatal("Expected error for invalid kustomization (missing resource file), got nil")
+	}
+	if !strings.Contains(err.Error(), "failed to run kustomize") {
+		t.Errorf("Expected error message about failed to run kustomize, got: %v", err)
+	}
+}
+
+func TestKustomizePostRenderer_Run_TempDirCreationFailure(t *testing.T) {
+	// Test that NewTempDir() failure is handled correctly
+	// We'll manipulate TMPDIR to point to a read-only directory
+	originalTmpDir := os.Getenv("TMPDIR")
+	defer func() {
+		if originalTmpDir != "" {
+			if err := os.Setenv("TMPDIR", originalTmpDir); err != nil {
+				t.Logf("Failed to restore TMPDIR: %v", err)
+			}
+		} else {
+			if err := os.Unsetenv("TMPDIR"); err != nil {
+				t.Logf("Failed to unset TMPDIR: %v", err)
+			}
+		}
+	}()
+
+	// Create a temporary read-only directory
+	readOnlyDir, err := os.MkdirTemp("", "readonly-*")
+	if err != nil {
+		t.Skipf("Cannot create test directory: %v", err)
+	}
+	defer func() {
+		// Restore permissions before cleanup
+		if err := os.Chmod(readOnlyDir, 0755); err != nil {
+			t.Logf("Failed to restore permissions: %v", err)
+		}
+		if err := os.RemoveAll(readOnlyDir); err != nil {
+			t.Logf("Failed to remove temp directory: %v", err)
+		}
+	}()
+
+	// Make it read-only
+	if err := os.Chmod(readOnlyDir, 0444); err != nil {
+		t.Skipf("Cannot chmod directory: %v", err)
+	}
+
+	// Set TMPDIR to the read-only directory
+	if err := os.Setenv("TMPDIR", readOnlyDir); err != nil {
+		t.Fatalf("Failed to set TMPDIR: %v", err)
+	}
+
+	// Prepare input with KustomizePluginData
+	input := bytes.NewBufferString(`---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-service
+---
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
+files:
+  kustomization.yaml: |
+    apiVersion: kustomize.config.k8s.io/v1beta1
+    kind: Kustomization
+    resources:
+      - all.yaml
+`)
+
+	renderer := &KustomizePostRenderer{}
+	_, err = renderer.Run(input)
+	if err == nil {
+		t.Fatal("Expected error when temp directory creation fails, got nil")
+	}
+	if !strings.Contains(err.Error(), "failed to create temp directory") {
+		t.Errorf("Expected error message about failed to create temp directory, got: %v", err)
 	}
 }

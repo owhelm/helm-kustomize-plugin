@@ -22,7 +22,7 @@ test:
 ifndef GITHUB_ACTIONS
 	golangci-lint run
 endif
-	go test -v -coverprofile=$(COVERAGE_PROFILE) -covermode=atomic ./...
+	go test -v -coverpkg=./... -coverprofile=$(COVERAGE_PROFILE) -covermode=atomic ./...
 
 test-integration: reinstall
 	./test-integration.sh
