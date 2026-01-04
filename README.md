@@ -1,6 +1,6 @@
-# experiment-helm-kustomize-plugin
+# helm-kustomize-plugin
 
-This is an experiment to build a Kustomize plugin for Helm.
+A Helm post-renderer plugin to process kustomizations embedded inside a chart. 
 
 ## Requirements
 
