@@ -36,20 +36,12 @@ jobs:
       with:
         version: ${{ matrix.helm-version }}
 
-    - name: Run unit tests with coverage
-      run: make coverage-check
+    - name: Run all tests with coverage
+      run: make test-all
 
     - name: Display coverage summary
       if: always()
-      run: |
-        echo "=== Coverage Summary ==="
-        go tool cover -func=coverage.out | tail -1 | awk '{print "Overall Coverage: " $3}'
-        echo ""
-        echo "=== Coverage by Package ==="
-        go tool cover -func=coverage.out | grep -E "^github.com/owhelm" | grep -v "total"
-
-    - name: Run integration tests
-      run: make test-integration
+      run: make coverage-report
 
     - name: Upload coverage report
       if: always()

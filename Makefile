@@ -1,9 +1,9 @@
 .PHONY: build clean test test-integration test-all install uninstall reinstall \
-        coverage-report coverage-check coverage-view coverage-clean
+        coverage-report coverage-clean
 
 BINARY_NAME=helm-kustomize-plugin
 BUILD_DIR=dist
-COVERAGE_THRESHOLD=60
+COVERAGE_THRESHOLD=70
 COVERAGE_PROFILE=coverage.out
 COVERAGE_HTML=coverage.html
 COVERAGE_DIR=coverage
@@ -28,12 +28,6 @@ test-integration: reinstall
 	./test-integration.sh
 
 test-all: test test-integration
-
-coverage-report: test
-	@mkdir -p $(COVERAGE_DIR)
-	go tool cover -html=$(COVERAGE_PROFILE) -o $(COVERAGE_DIR)/$(COVERAGE_HTML)
-
-coverage-check: test
 	@echo "Checking coverage threshold (${COVERAGE_THRESHOLD}%)..."
 	@bash -c 'coverage=$$(go tool cover -func=$(COVERAGE_PROFILE) | tail -1 | awk "{print int(\$$3)}"); \
 	if [ $$coverage -lt $(COVERAGE_THRESHOLD) ]; then \
@@ -42,15 +36,16 @@ coverage-check: test
 	else \
 	  echo "Coverage $$coverage% meets threshold $(COVERAGE_THRESHOLD)%"; \
 	fi'
+	@mkdir -p $(COVERAGE_DIR)
+	@go tool cover -html=$(COVERAGE_PROFILE) -o $(COVERAGE_DIR)/$(COVERAGE_HTML)
+	@echo "Coverage HTML report generated at $(COVERAGE_DIR)/$(COVERAGE_HTML)"
 
-coverage-view: coverage-report
-	@if command -v open > /dev/null; then \
-	  open $(COVERAGE_DIR)/$(COVERAGE_HTML); \
-	elif command -v xdg-open > /dev/null; then \
-	  xdg-open $(COVERAGE_DIR)/$(COVERAGE_HTML); \
-	else \
-	  echo "Please open $(COVERAGE_DIR)/$(COVERAGE_HTML) in your browser"; \
-	fi
+coverage-report:
+	@echo "=== Coverage Summary ==="
+	@go tool cover -func=$(COVERAGE_PROFILE) | tail -1 | awk '{print "Overall Coverage: " $$3}'
+	@echo ""
+	@echo "=== Coverage by Package ==="
+	@go tool cover -func=$(COVERAGE_PROFILE) | grep -E "^github.com/owhelm" | grep -v "total"
 
 coverage-clean:
 	rm -rf $(COVERAGE_DIR) $(COVERAGE_PROFILE) $(COVERAGE_HTML) helm-kustomize-*.tgz

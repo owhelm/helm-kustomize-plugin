@@ -34,8 +34,11 @@ go test -v ./internal/parser -run TestParseManifests
 # Run integration tests (requires Helm v4)
 make test-integration
 
-# Run all tests (unit + integration)
+# Run all tests (unit + integration) with coverage check and HTML report generation
 make test-all
+
+# Display coverage summary (requires coverage.out from prior test run)
+make coverage-report
 
 # Install plugin into Helm
 make install
@@ -46,7 +49,7 @@ make uninstall
 # Development cycle: rebuild and reinstall
 make reinstall
 
-# Clean build artifacts
+# Clean build artifacts and coverage files
 make clean
 ```
 
