@@ -14,7 +14,7 @@ build:
 	go build -o $(BUILD_DIR)/$(BINARY_NAME) .
 	cp plugin.yaml $(BUILD_DIR)/
 
-clean: coverage-clean
+clean: coverage-clean uninstall
 	rm -rf $(BUILD_DIR)
 	go clean
 
@@ -51,7 +51,7 @@ coverage-view: coverage-report
 	fi
 
 coverage-clean:
-	rm -rf $(COVERAGE_DIR) $(COVERAGE_PROFILE)
+	rm -rf $(COVERAGE_DIR) $(COVERAGE_PROFILE) $(COVERAGE_HTML) helm-kustomize-*.tgz
 
 install: build
 	helm plugin install $(BUILD_DIR)

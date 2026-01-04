@@ -15,7 +15,7 @@
 ## Testing
 
 - [ ] Makefile: use custom `HELM_PLUGINS` path when testing
-- [ ] Makefile: add shortcut to verify the example simple-app
+- [x] Makefile: add shortcut to verify the example simple-app
 - [ ] Add test case: chart without KustomizePluginData (pass-through)
 - [ ] Add test case: malformed KustomizePluginData resource
 - [ ] Add test case: nested directory structures

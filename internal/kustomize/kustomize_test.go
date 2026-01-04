@@ -83,6 +83,32 @@ func TestParseKustomization_InvalidYAML(t *testing.T) {
 	}
 }
 
+func TestParseKustomization_ResourcesNotArray(t *testing.T) {
+	input := `resources: "not an array"`
+	_, err := ParseKustomization([]byte(input))
+	if err == nil {
+		t.Fatal("ParseKustomization() should return error when resources is not an array")
+	}
+	if !strings.Contains(err.Error(), "resources field must be an array") {
+		t.Errorf("Error should mention resources field must be an array, got: %v", err)
+	}
+}
+
+func TestParseKustomization_ResourceItemNotString(t *testing.T) {
+	input := `resources:
+  - all.yaml
+  - 123
+  - base.yaml
+`
+	_, err := ParseKustomization([]byte(input))
+	if err == nil {
+		t.Fatal("ParseKustomization() should return error when resource item is not a string")
+	}
+	if !strings.Contains(err.Error(), "must be a string") {
+		t.Errorf("Error should mention resource must be a string, got: %v", err)
+	}
+}
+
 func TestKustomization_AddResource(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -291,5 +317,25 @@ patches:
 
 	if string(gotYAML) != string(expectedYAML) {
 		t.Errorf("EnsureAllYamlInKustomization() output =\n%s\nwant =\n%s", string(gotYAML), string(expectedYAML))
+	}
+}
+
+func TestEnsureAllYamlInKustomization_ParseError(t *testing.T) {
+	// Test that EnsureAllYamlInKustomization returns error when ParseKustomization fails
+	input := `resources: "not an array"`
+	_, _, err := EnsureAllYamlInKustomization([]byte(input))
+	if err == nil {
+		t.Fatal("EnsureAllYamlInKustomization() should return error when ParseKustomization fails")
+	}
+}
+
+func TestBuild_Error(t *testing.T) {
+	// Test Build with an invalid/non-existent directory
+	_, err := Build("/nonexistent/directory/that/does/not/exist")
+	if err == nil {
+		t.Fatal("Build() should return error for non-existent directory")
+	}
+	if !strings.Contains(err.Error(), "kubectl kustomize failed") {
+		t.Errorf("Error should mention kubectl kustomize failed, got: %v", err)
 	}
 }
