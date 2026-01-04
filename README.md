@@ -4,8 +4,8 @@ A Helm post-renderer plugin to process kustomizations embedded inside a chart.
 
 ## Requirements
 
-- Helm v4 (with subprocess runtime support for post-renderer plugins)
-- kubectl (for `kubectl kustomize` command)
+- Helm v3 or v4
+- kubectl (latest)
 
 ## Installation
 
