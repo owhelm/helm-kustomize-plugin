@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        helm-version: ['v4.0.4']
+        helm-version: ['v3.19.4', 'v4.0.4']
         kubectl-version: ['latest']
 
     steps:

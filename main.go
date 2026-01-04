@@ -6,9 +6,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/owhelm/helm-kustomize-plugin/internal/extractor"
-	"github.com/owhelm/helm-kustomize-plugin/internal/kustomize"
-	"github.com/owhelm/helm-kustomize-plugin/internal/parser"
+	"github.com/owhelm/helm-kustomize/internal/extractor"
+	"github.com/owhelm/helm-kustomize/internal/kustomize"
+	"github.com/owhelm/helm-kustomize/internal/parser"
 )
 
 // KustomizePostRenderer processes Helm manifests through kustomize transformations.

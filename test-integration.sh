@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Integration test for helm-kustomize-plugin
+# Integration test for helm-kustomize
 # Tests the plugin against the simple-app example
 
 echo "Running integration test..."
@@ -13,16 +13,20 @@ if ! command -v yq &> /dev/null; then
   exit 1
 fi
 
-# Ensure plugin is installed
-if ! helm plugin list | grep -q helm-kustomize; then
-  echo "Error: helm-kustomize plugin not installed"
-  echo "Run 'make install' first"
-  exit 1
+# Detect Helm version and choose appropriate post-renderer
+HELM_VERSION_MAJOR=$(helm version --template='{{.Version}}' 2>/dev/null | sed -n 's/^v\([0-9]*\).*/\1/p')
+
+if [ "$HELM_VERSION_MAJOR" -ge 4 ] 2>/dev/null; then
+  echo "Helm v${HELM_VERSION_MAJOR} detected - using plugin approach"
+  POST_RENDERER="helm-kustomize"
+else
+  echo "Helm v${HELM_VERSION_MAJOR} detected - using direct binary"
+  POST_RENDERER="./dist/helm-kustomize"
 fi
 
-# Run helm template with the plugin
+# Run helm template with the appropriate post-renderer
 echo "Testing simple-app example..."
-OUTPUT=$(helm template examples/simple-app --post-renderer helm-kustomize)
+OUTPUT=$(helm template examples/simple-app --post-renderer "$POST_RENDERER")
 
 # Check for expected transformations
 FAILED=0

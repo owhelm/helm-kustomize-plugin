@@ -1,23 +1,27 @@
-# helm-kustomize-plugin
+# helm-kustomize
 
 A Helm post-renderer plugin to process kustomizations embedded inside a chart. 
 
 ## Requirements
 
-- Helm v4 (with subprocess runtime support for post-renderer plugins)
-- kubectl (for `kubectl kustomize` command)
+- Helm v3 or v4
+- kubectl (latest)
 
 ## Installation
 
 ### Helm v4
 
+Install from the [OCI registry](https://github.com/orgs/owhelm/packages/container/package/helm-kustomize):
+
 1. `helm plugin install oci://ghcr.io/owhelm/helm-kustomize:latest`
 
 ### Helm v3
 
+Download from the [OCI registry](https://github.com/orgs/owhelm/packages/container/package/helm-kustomize) and use the binary from inside there:
+
 1. `oras pull ghcr.io/owhelm/helm-kustomize:latest`
 2. Extract the tarball
-3. Use `helm-kustomize-plugin` as `--post-renderer`
+3. Use `helm-kustomize` as `--post-renderer`
 
 ## Design
 

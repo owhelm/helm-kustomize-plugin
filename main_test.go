@@ -249,7 +249,7 @@ files:
     resources:
       - all.yaml
     commonAnnotations:
-      managed-by: helm-kustomize-plugin
+      managed-by: helm-kustomize
 `)
 
 	renderer := &KustomizePostRenderer{}
@@ -264,14 +264,14 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    managed-by: helm-kustomize-plugin
+    managed-by: helm-kustomize
   name: my-config
 ---
 apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    managed-by: helm-kustomize-plugin
+    managed-by: helm-kustomize
   name: my-service
 spec:
   type: ClusterIP
@@ -280,14 +280,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    managed-by: helm-kustomize-plugin
+    managed-by: helm-kustomize
   name: my-deployment
 spec:
   replicas: 2
   template:
     metadata:
       annotations:
-        managed-by: helm-kustomize-plugin
+        managed-by: helm-kustomize
 `
 
 	if output.String() != expected {

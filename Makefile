@@ -1,19 +1,25 @@
 .PHONY: build clean test test-integration test-all install uninstall reinstall \
         coverage-report coverage-clean
 
-BINARY_NAME=helm-kustomize-plugin
+BINARY_NAME=helm-kustomize
 BUILD_DIR=dist
 COVERAGE_THRESHOLD=80
 COVERAGE_PROFILE=coverage.out
 COVERAGE_HTML=coverage.html
 COVERAGE_DIR=coverage
 
+# Get Helm version and check if it's >= 4
+HELM_VERSION_MAJOR := $(shell helm version --template='{{.Version}}' 2>/dev/null | sed -n 's/^v\([0-9]*\).*/\1/p')
+HELM_MODERN_PLUGINS := $(shell [ "$(HELM_VERSION_MAJOR)" -ge "4" ] 2>/dev/null && echo "true" || echo "false")
+
 build:
 	go fmt ./...
 	mkdir -p $(BUILD_DIR)
 	go build -o $(BUILD_DIR)/$(BINARY_NAME) .
 	cp plugin.yaml $(BUILD_DIR)/
+ifeq ($(HELM_MODERN_PLUGINS),true)
 	helm plugin package dist --sign=false
+endif
 
 clean: coverage-clean uninstall
 	rm -rf $(BUILD_DIR)
@@ -52,10 +58,14 @@ coverage-clean:
 	rm -rf $(COVERAGE_DIR) $(COVERAGE_PROFILE) $(COVERAGE_HTML) helm-kustomize-*.tgz
 
 install: build
+ifeq ($(HELM_MODERN_PLUGINS),true)
 	helm plugin install $(BUILD_DIR)
+endif
 
 uninstall:
+ifeq ($(HELM_MODERN_PLUGINS),true)
 	helm plugin uninstall helm-kustomize 2>/dev/null || true
+endif
 
 # Development: uninstall, rebuild, and reinstall
 reinstall: uninstall build install

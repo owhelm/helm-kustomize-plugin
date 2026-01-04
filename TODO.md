@@ -26,4 +26,3 @@
 - [ ] Support for multiple kustomization files
 - [ ] Configurable resource naming (alternative to `all.yaml`)
 - [ ] Performance optimization for large charts
-- [ ] Support helm v3
