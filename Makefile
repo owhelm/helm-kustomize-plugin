@@ -1,13 +1,15 @@
 .PHONY: build clean test test-integration test-all install uninstall reinstall
 
 BINARY_NAME=helm-kustomize-plugin
-BUILD_DIR=.
+BUILD_DIR=dist
 
 build:
+	mkdir -p $(BUILD_DIR)
 	go build -o $(BUILD_DIR)/$(BINARY_NAME) .
+	cp plugin.yaml $(BUILD_DIR)/
 
 clean:
-	rm -f $(BUILD_DIR)/$(BINARY_NAME)
+	rm -rf $(BUILD_DIR)
 	go clean
 
 test:
@@ -19,10 +21,10 @@ test-integration: reinstall
 test-all: test test-integration
 
 install: build
-	helm plugin install .
+	helm plugin install $(BUILD_DIR)
 
 uninstall:
-	helm plugin uninstall kustomize 2>/dev/null || true
+	helm plugin uninstall helm-kustomize 2>/dev/null || true
 
 # Development: uninstall, rebuild, and reinstall
 reinstall: uninstall build install

@@ -14,15 +14,15 @@ if ! command -v yq &> /dev/null; then
 fi
 
 # Ensure plugin is installed
-if ! helm plugin list | grep -q kustomize; then
-  echo "Error: kustomize plugin not installed"
+if ! helm plugin list | grep -q helm-kustomize; then
+  echo "Error: helm-kustomize plugin not installed"
   echo "Run 'make install' first"
   exit 1
 fi
 
 # Run helm template with the plugin
 echo "Testing simple-app example..."
-OUTPUT=$(helm template examples/simple-app --post-renderer kustomize)
+OUTPUT=$(helm template examples/simple-app --post-renderer helm-kustomize)
 
 # Check for expected transformations
 FAILED=0

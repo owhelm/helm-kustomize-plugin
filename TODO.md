@@ -47,7 +47,7 @@
 
 ## Build & Distribution
 
-- [ ] Set up CI/CD pipeline
+- [x] Set up CI/CD pipeline
 - [ ] Create release automation
 - [ ] Add version management
 
