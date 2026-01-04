@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Integration test for helm-kustomize-plugin
+# Integration test for helm-kustomize
 # Tests the plugin against the simple-app example
 
 echo "Running integration test..."
@@ -21,7 +21,7 @@ if [ "$HELM_VERSION_MAJOR" -ge 4 ] 2>/dev/null; then
   POST_RENDERER="helm-kustomize"
 else
   echo "Helm v${HELM_VERSION_MAJOR} detected - using direct binary"
-  POST_RENDERER="./dist/helm-kustomize-plugin"
+  POST_RENDERER="./dist/helm-kustomize"
 fi
 
 # Run helm template with the appropriate post-renderer

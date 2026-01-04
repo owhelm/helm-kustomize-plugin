@@ -6,4 +6,4 @@ description: A Helm post-renderer plugin that applies Kustomize transformations
 runtime: subprocess
 runtimeConfig:
   platformCommand:
-    - command: ${HELM_PLUGIN_DIR}/helm-kustomize-plugin
+    - command: ${HELM_PLUGIN_DIR}/helm-kustomize

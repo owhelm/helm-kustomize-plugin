@@ -9,7 +9,7 @@
 *.dylib
 
 # Plugin binary
-helm-kustomize-plugin
+helm-kustomize
 
 # Test binary, built with `go test -c`
 *.test

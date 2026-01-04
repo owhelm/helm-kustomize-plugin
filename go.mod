@@ -1,4 +1,4 @@
-module github.com/owhelm/helm-kustomize-plugin
+module github.com/owhelm/helm-kustomize
 
 go 1.25.5
 

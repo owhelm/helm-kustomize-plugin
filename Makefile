@@ -1,7 +1,7 @@
 .PHONY: build clean test test-integration test-all install uninstall reinstall \
         coverage-report coverage-clean
 
-BINARY_NAME=helm-kustomize-plugin
+BINARY_NAME=helm-kustomize
 BUILD_DIR=dist
 COVERAGE_THRESHOLD=80
 COVERAGE_PROFILE=coverage.out
