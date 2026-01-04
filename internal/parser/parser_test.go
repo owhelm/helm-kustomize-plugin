@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -289,5 +290,91 @@ func TestMarshalResources_Empty(t *testing.T) {
 
 	if len(data) != 0 {
 		t.Errorf("Expected empty output, got %d bytes", len(data))
+	}
+}
+
+// errorMarshaler is a type that always fails to marshal to YAML
+type errorMarshaler struct{}
+
+func (e errorMarshaler) MarshalYAML() (interface{}, error) {
+	return nil, fmt.Errorf("intentional marshal error")
+}
+
+func TestMarshalResources_EncodingError(t *testing.T) {
+	// Create a resource with a field that will fail to marshal
+	resources := []map[string]any{
+		{
+			"apiVersion": "v1",
+			"kind":       "Service",
+			"failField":  errorMarshaler{},
+		},
+	}
+
+	_, err := MarshalResources(resources)
+	if err == nil {
+		t.Fatal("Expected error when marshaling type with MarshalYAML error, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "failed to encode resource") {
+		t.Errorf("Expected error about encoding failure, got: %v", err)
+	}
+}
+
+func TestParseManifests_KustomizePluginData_InvalidFiles(t *testing.T) {
+	tests := []struct {
+		name          string
+		input         string
+		wantErrSubstr string
+	}{
+		{
+			name: "files field not a map",
+			input: `---
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
+files: "not a map"
+`,
+			wantErrSubstr: "files' field must be a map",
+		},
+		{
+			name: "files field missing",
+			input: `---
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
+`,
+			wantErrSubstr: "files' field must be a map",
+		},
+		{
+			name: "files value is not a string",
+			input: `---
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
+files:
+  test.yaml: 123
+`,
+			wantErrSubstr: "files' values must be strings",
+		},
+		{
+			name: "files value is a map instead of string",
+			input: `---
+apiVersion: helm.plugin.kustomize/v1
+kind: KustomizePluginData
+files:
+  test.yaml:
+    nested: value
+`,
+			wantErrSubstr: "files' values must be strings",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ParseManifests([]byte(tt.input))
+			if err == nil {
+				t.Fatal("Expected error, got nil")
+			}
+			if !strings.Contains(err.Error(), tt.wantErrSubstr) {
+				t.Errorf("Expected error containing %q, got: %v", tt.wantErrSubstr, err)
+			}
+		})
 	}
 }

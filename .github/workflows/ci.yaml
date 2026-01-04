@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+
+jobs:
+  test:
+    name: Test (Helm ${{ matrix.helm-version }}, kubectl ${{ matrix.kubectl-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        helm-version: ['v4.0.4']
+        kubectl-version: ['latest']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25'
+        cache: true
+
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v4
+      with:
+        version: ${{ matrix.kubectl-version }}
+
+    - name: Install Helm
+      uses: azure/setup-helm@v4
+      with:
+        version: ${{ matrix.helm-version }}
+
+    - name: Run all tests with coverage
+      run: make test-all
+
+    - name: Display coverage summary
+      if: always()
+      run: make coverage-report
+
+    - name: Upload coverage report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report-${{ matrix.helm-version }}-${{ matrix.kubectl-version }}
+        path: coverage/
+        retention-days: 30
+        if-no-files-found: ignore
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25'
+        cache: true
+
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v9
+      with:
+        version: 'v2.7.2'

@@ -301,3 +301,127 @@ func TestTempDir_ReadFile(t *testing.T) {
 		})
 	}
 }
+
+func TestTempDir_Cleanup_EmptyPath(t *testing.T) {
+	// Test cleanup with empty path (should be a no-op)
+	tempDir := &TempDir{Path: ""}
+	tempDir.Cleanup() // Should not panic or error
+}
+
+func TestTempDir_Cleanup_NonExistentPath(t *testing.T) {
+	// Test cleanup with a path that doesn't exist (should print warning but not error)
+	tempDir := &TempDir{Path: "/nonexistent/path/that/does/not/exist"}
+	tempDir.Cleanup() // Should print warning to stderr but not panic
+}
+
+func TestTempDir_WriteFile_ReadOnlyParent(t *testing.T) {
+	// Test WriteFile when we can create directories but not write files
+	// This is challenging to test portably, but we can try creating a scenario
+	// where WriteFile fails but MkdirAll succeeds
+	tempDir, err := NewTempDir()
+	if err != nil {
+		t.Fatalf("NewTempDir() error = %v", err)
+	}
+	defer tempDir.Cleanup()
+
+	// Create a directory first
+	err = tempDir.WriteFile("subdir/test.yaml", []byte("initial"))
+	if err != nil {
+		t.Fatalf("Initial WriteFile() error = %v", err)
+	}
+
+	// Now make the file read-only
+	filePath := filepath.Join(tempDir.Path, "subdir/test.yaml")
+	if err := os.Chmod(filePath, 0444); err != nil {
+		t.Skipf("Cannot chmod file: %v", err)
+	}
+
+	// Try to overwrite the read-only file - this should fail
+	err = tempDir.WriteFile("subdir/test.yaml", []byte("overwrite"))
+	if err == nil {
+		t.Error("WriteFile() should fail when overwriting read-only file")
+	}
+}
+
+func TestTempDir_Cleanup_RemoveAllError(t *testing.T) {
+	// This test attempts to trigger a RemoveAll error
+	// We'll create a directory with a read-only file and try to remove it
+	tempDir, err := NewTempDir()
+	if err != nil {
+		t.Fatalf("NewTempDir() error = %v", err)
+	}
+	// Don't defer cleanup yet
+
+	// Create a subdirectory with a file
+	err = tempDir.WriteFile("subdir/file.txt", []byte("content"))
+	if err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	// Make the subdirectory read-only (no write/execute permissions)
+	// This should prevent RemoveAll from deleting the contents
+	subdirPath := filepath.Join(tempDir.Path, "subdir")
+	if err := os.Chmod(subdirPath, 0444); err != nil {
+		// If we can't set permissions, skip this test
+		tempDir.Cleanup()
+		t.Skipf("Cannot chmod directory: %v", err)
+	}
+
+	// Attempt cleanup - this should print a warning
+	tempDir.Cleanup()
+
+	// Cleanup the permissions so we can actually remove the directory
+	if err := os.Chmod(subdirPath, 0755); err != nil {
+		t.Logf("Failed to restore permissions: %v", err)
+	}
+	tempDir.Cleanup()
+}
+
+func TestNewTempDir_MkdirTempFailure(t *testing.T) {
+	// Test error handling when os.MkdirTemp fails
+	// We'll try to set TMPDIR to a read-only directory
+	originalTmpDir := os.Getenv("TMPDIR")
+	defer func() {
+		if originalTmpDir != "" {
+			if err := os.Setenv("TMPDIR", originalTmpDir); err != nil {
+				t.Logf("Failed to restore TMPDIR: %v", err)
+			}
+		} else {
+			if err := os.Unsetenv("TMPDIR"); err != nil {
+				t.Logf("Failed to unset TMPDIR: %v", err)
+			}
+		}
+	}()
+
+	// Create a temporary read-only directory
+	readOnlyDir, err := os.MkdirTemp("", "readonly-*")
+	if err != nil {
+		t.Skipf("Cannot create test directory: %v", err)
+	}
+	defer func() {
+		if err := os.RemoveAll(readOnlyDir); err != nil {
+			t.Logf("Failed to remove temp directory: %v", err)
+		}
+	}()
+
+	// Make it read-only
+	if err := os.Chmod(readOnlyDir, 0444); err != nil {
+		t.Skipf("Cannot chmod directory: %v", err)
+	}
+	defer func() {
+		if err := os.Chmod(readOnlyDir, 0755); err != nil {
+			t.Logf("Failed to restore permissions: %v", err)
+		}
+	}()
+
+	// Set TMPDIR to the read-only directory
+	if err := os.Setenv("TMPDIR", readOnlyDir); err != nil {
+		t.Fatalf("Failed to set TMPDIR: %v", err)
+	}
+
+	// This should fail
+	_, err = NewTempDir()
+	if err == nil {
+		t.Error("NewTempDir() should fail when TMPDIR is read-only")
+	}
+}

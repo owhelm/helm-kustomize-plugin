@@ -16,6 +16,7 @@ helm-kustomize-plugin
 
 # Code coverage profiles and other test artifacts
 *.out
+coverage/
 coverage.*
 *.coverprofile
 profile.cov
@@ -31,6 +32,8 @@ go.work.sum
 .env
 
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
 .claude
+dist
+helm-kustomize-*.tgz
